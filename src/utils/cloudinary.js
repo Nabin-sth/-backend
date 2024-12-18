@@ -38,11 +38,12 @@ const getVidById = async (videoId) => {
     return null;
   }
 };
-const updateVideo = async (videoId) => {
-  try {
-    await cloudinary.api.update(videoId,{resource_type:"video",context})
-  } catch (error) {
-    console.log("VIdeo update errro: ", error);
-  }
-};
+// const updateVideo = async (videoId) => {
+//   try {
+//     await cloudinary.api.update(videoId,{resource_type:"video",context})
+//   } catch (error) {
+//     console.log("VIdeo update errro: ", error);
+//   }
+// };
 export { uploadOnCloudinary, getVidById };
+
