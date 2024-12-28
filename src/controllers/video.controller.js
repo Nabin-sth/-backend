@@ -7,8 +7,55 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { getVidById, uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
-  //TODO: get all videos based on query, sort, pagination
+  const {
+    page = 1,
+    limit = 10,
+    query = "",
+    sortBy = "createdAt",
+    sortType = "desc",
+    userId,
+  } = req.query;
+
+  try {
+    // Construct filters
+    const filters = {};
+    if (query) {
+      filters.title = { $regex: query, $options: "i" }; // Search for title containing query (case-insensitive)
+    }
+    if (userId) {
+      filters.userId = userId; // Filter by userId if provided
+    }
+
+    // Parse pagination
+    const skip = (page - 1) * limit;
+
+    // Parse sorting
+    const sortOptions = {};
+    sortOptions[sortBy] = sortType === "desc" ? -1 : 1;
+
+    // Fetch videos from the database
+    const videos = await Video.find(filters)
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    // Get total count for pagination
+    const totalCount = await Video.countDocuments(filters);
+
+    res.status(200).json({
+      success: true,
+      data: videos,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalCount / limit),
+        totalItems: totalCount,
+      },
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Server Error", error: error.message });
+  }
 });
 
 const publishAVideo = asyncHandler(async (req, res) => {
@@ -102,8 +149,6 @@ const deleteVideo = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, deletedVideo, "DElete success"));
   //TODO: delete video
 });
-
-
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
