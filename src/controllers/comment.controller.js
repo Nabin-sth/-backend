@@ -11,7 +11,6 @@ const getVideoComments = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
 });
 
-
 const addComment = asyncHandler(async (req, res) => {
   // TODO: add a comment to a video
   const { videoId } = req.params;
@@ -42,6 +41,24 @@ const addComment = asyncHandler(async (req, res) => {
 
 const updateComment = asyncHandler(async (req, res) => {
   // TODO: update a comment
+  const { commentId } = req.params;
+  const { newComment } = req.body;
+
+  if (!commentId || !newComment) {
+    throw new ApiError(400, "no comment found");
+  }
+  const comment = await Comment.findByIdAndUpdate(
+    commentId,
+    {
+      $set: { content: newComment },
+    },
+    {
+      new: true,
+    }
+  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, comment, "Comment updated Successfully"));
 });
 
 const deleteComment = asyncHandler(async (req, res) => {
