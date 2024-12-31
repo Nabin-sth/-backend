@@ -6,58 +6,110 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { getVidById, uploadOnCloudinary } from "../utils/cloudinary.js";
 
+// const getAllVideos = asyncHandler(async (req, res) => {
+//   const {
+//     page = 1,
+//     limit = 10,
+//     query = "",
+//     sortBy = "createdAt",
+//     sortType = "desc",
+//     userId,
+//   } = req.query;
+
+//   try {
+//     // Construct filters
+//     const filters = {};
+//     if (query) {
+//       filters.title = { $regex: query, $options: "i" }; // Search for title containing query (case-insensitive)
+//     }
+//     if (userId) {
+//       filters.userId = userId; // Filter by userId if provided
+//     }
+
+//     // Parse pagination
+//     const skip = (parseInt(page) - 1) * parseInt(limit);
+
+//     // Parse sorting
+//     const sortOptions = {};
+//     sortOptions[sortBy] = sortType === "desc" ? -1 : 1;
+
+//     // Fetch videos from the database
+//     const videos = await Video.find(filters)
+//       .sort(sortOptions)
+//       .skip(skip)
+//       .limit(parseInt(limit));
+
+//     // Get total count for pagination
+//     const totalCount = await Video.countDocuments(filters);
+
+//     res.status(200).json({
+//       success: true,
+//       data: videos,
+//       pagination: {
+//         currentPage: parseInt(page),
+//         totalPages: Math.ceil(totalCount / limit),
+//         totalItems: totalCount,
+//       },
+//     });
+//   } catch (error) {
+//     res
+//       .status(500)
+//       .json({ success: false, message: "Server Error", error: error.message });
+//   }
+// });
+
+// const getAllVideos = asyncHandler(async (req, res) => {
+//   const {
+//     page = 1,
+//     query = "",
+//     sortBy = "createdAt",
+//     sortType = "desc",
+//     limit = 10,
+//   } = req.body;
+// });
 const getAllVideos = asyncHandler(async (req, res) => {
   const {
     page = 1,
     limit = 10,
-    query = "",
     sortBy = "createdAt",
     sortType = "desc",
+    query = "",
     userId,
   } = req.query;
-
   try {
-    // Construct filters
     const filters = {};
     if (query) {
-      filters.title = { $regex: query, $options: "i" }; // Search for title containing query (case-insensitive)
+      filters.title = { $regex: query, $options: "i" };
     }
     if (userId) {
-      filters.userId = userId; // Filter by userId if provided
+      filters.userIdid = userId;
     }
+    const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Parse pagination
-    const skip = (page - 1) * limit;
-
-    // Parse sorting
     const sortOptions = {};
     sortOptions[sortBy] = sortType === "desc" ? -1 : 1;
 
-    // Fetch videos from the database
     const videos = await Video.find(filters)
-      .sort(sortOptions)
       .skip(skip)
+      .sort(sortOptions)
       .limit(parseInt(limit));
 
-    // Get total count for pagination
     const totalCount = await Video.countDocuments(filters);
+    return res.status(200).json(
+      new ApiResponse(
+        200,
 
-    res.status(200).json({
-      success: true,
-      data: videos,
-      pagination: {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(totalCount / limit),
-        totalItems: totalCount,
-      },
-    });
+        videos,
+
+        "Success"
+      )
+    );
   } catch (error) {
-    res
+    return res
       .status(500)
-      .json({ success: false, message: "Server Error", error: error.message });
+      .json(new ApiError(500, "Failed to get all videos", error.message));
   }
 });
-
 const publishAVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
   const videoPath = req.files?.videoFile[0]?.path;
